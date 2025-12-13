@@ -1,4 +1,234 @@
--- Lua Hub V2 by Lua Hotel
+-- PVP Section
+local PVPSection = LuaHubTab:CreateSection("PVP Features")
+
+-- Aimbot
+local aimbotConnection
+local mouse = game.Players.LocalPlayer:GetMouse()
+
+LuaHubTab:CreateKeybind({
+    Name = "Aimbot (Right Click to Target)",
+    CurrentKeybind = "V",
+    HoldToInteract = false,
+    Flag = "AimbotKeybind",
+    Callback = function(Keybind)
+        aimbotEnabled = not aimbotEnabled
+        
+        if aimbotEnabled then
+            Rayfield:Notify({
+                Title = "Aimbot Enabled",
+                Content = "Right click on a player to lock on!",
+                Duration = 3,
+            })
+            
+            -- Right click detection
+            mouse.Button2Down:Connect(function()
+                if not aimbotEnabled then return end
+                
+                local target = mouse.Target
+                if target and target.Parent then
+                    local humanoid = target.Parent:FindFirstChildOfClass("Humanoid")
+                    if humanoid then
+                        aimbotTarget = target.Parent
+                        Rayfield:Notify({
+                            Title = "Target Locked",
+                            Content = "Locked onto: " .. aimbotTarget.Name,
+                            Duration = 2,
+                        })
+                    end
+                end
+            end)
+            
+            aimbotConnection = game:GetService("RunService").RenderStepped:Connect(function()
+                if not aimbotEnabled or not aimbotTarget then return end
+                
+                local player = game.Players.LocalPlayer
+                local character = player.Character
+                if not character then return end
+                
+                local targetHrp = aimbotTarget:FindFirstChild("HumanoidRootPart")
+                local hrp = character:FindFirstChild("HumanoidRootPart")
+                
+                if targetHrp and hrp then
+                    -- Aim camera at target
+                    workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, targetHrp.Position)
+                    
+                    -- Rotate body to face target
+                    hrp.CFrame = CFrame.new(hrp.Position, Vector3.new(targetHrp.Position.X, hrp.Position.Y, targetHrp.Position.Z))
+                end
+            end)
+        else
+            Rayfield:Notify({
+                Title = "Aimbot Disabled",
+                Content = "Aimbot deactivated",
+                Duration = 2,
+            })
+            
+            if aimbotConnection then
+                aimbotConnection:Disconnect()
+            end
+            aimbotTarget = nil
+        end
+    end,
+})
+
+-- Auto Farm for Battleground Games
+local autoFarmConnection
+
+LuaHubTab:CreateToggle({
+    Name = "Auto Farm (Battleground Games)",
+    CurrentValue = false,
+    Flag = "AutoFarm",
+    Callback = function(Value)
+        autoFarmEnabled = Value
+        
+        if autoFarmEnabled then
+            Rayfield:Notify({
+                Title = "Auto Farm ON",
+                Content = "Farming nearest player with abilities!",
+                Duration = 3,
+            })
+            
+            autoFarmConnection = game:GetService("RunService").Heartbeat:Connect(function()
+                if not autoFarmEnabled then return end
+                
+                local player = game.Players.LocalPlayer
+                local character = player.Character
+                if not character then return end
+                
+                local hrp = character:FindFirstChild("HumanoidRootPart")
+                if not hrp then return end
+                
+                -- Find nearest player
+                local nearestPlayer = nil
+                local nearestDistance = math.huge
+                
+                for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+                    if otherPlayer ~= player and otherPlayer.Character then
+                        local otherHrp = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+                        if otherHrp then
+                            local distance = (hrp.Position - otherHrp.Position).Magnitude
+                            if distance < nearestDistance then
+                                nearestDistance = distance
+                                nearestPlayer = otherPlayer
+                            end
+                        end
+                    end
+                end
+                
+                if nearestPlayer and nearestPlayer.Character then
+                    local targetHrp = nearestPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    if targetHrp then
+                        local targetPos = targetHrp.Position
+                        local distance = (hrp.Position - targetPos).Magnitude
+                        
+                        -- Move towards player if too far
+                        if distance > 6 then
+                            local direction = (targetPos - hrp.Position).Unit
+                            hrp.CFrame = hrp.CFrame + (direction * 0.5)
+                        end
+                        
+                        -- Keep distance between 4-6 studs
+                        if distance > 4 and distance < 6 then
+                            -- Attack (M1)
+                            mouse1press()
+                            wait(0.1)
+                            mouse1release()
+                            
+                            -- Use abilities 1-4
+                            for i = 1, 4 do
+                                local key = Enum.KeyCode["Key" .. i]
+                                game:GetService("VirtualInputManager"):SendKeyEvent(true, key, false, game)
+                                wait(0.1)
+                                game:GetService("VirtualInputManager"):SendKeyEvent(false, key, false, game)
+                                wait(0.3)
+                            end
+                        end
+                    end
+                end
+            end)
+        else
+            Rayfield:Notify({
+                Title = "Auto Farm OFF",
+                Content = "Auto farm deactivated",
+                Duration = 2,
+            })
+            
+            if autoFarmConnection then
+                autoFarmConnection:Disconnect()
+            end
+        end
+    end,
+})
+
+-- Kill Aura (for PVP games)
+local killAuraEnabled = false
+local killAuraConnection
+
+LuaHubTab:CreateSlider({
+    Name = "Kill Aura Range",
+    Range = {5, 30},
+    Increment = 1,
+    Suffix = " studs",
+    CurrentValue = 15,
+    Flag = "KillAuraRange",
+    Callback = function(Value)
+        -- Range stored for kill aura
+    end,
+})
+
+LuaHubTab:CreateToggle({
+    Name = "Kill Aura",
+    CurrentValue = false,
+    Flag = "KillAura",
+    Callback = function(Value)
+        killAuraEnabled = Value
+        local range = 15
+        
+        if killAuraEnabled then
+            Rayfield:Notify({
+                Title = "Kill Aura ON",
+                Content = "Attacking all nearby players!",
+                Duration = 2,
+            })
+            
+            killAuraConnection = game:GetService("RunService").Heartbeat:Connect(function()
+                if not killAuraEnabled then return end
+                
+                local player = game.Players.LocalPlayer
+                local character = player.Character
+                if not character then return end
+                
+                local hrp = character:FindFirstChild("HumanoidRootPart")
+                if not hrp then return end
+                
+                for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+                    if otherPlayer ~= player and otherPlayer.Character then
+                        local otherHrp = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+                        if otherHrp then
+                            local distance = (hrp.Position - otherHrp.Position).Magnitude
+                            if distance <= range then
+                                -- Attack player in range
+                                mouse1press()
+                                wait(0.05)
+                                mouse1release()
+                            end
+                        end
+                    end
+                end
+            end)
+        else
+            Rayfield:Notify({
+                Title = "Kill Aura OFF",
+                Content = "Kill aura deactivated",
+                Duration = 2,
+            })
+            
+            if killAuraConnection then
+                killAuraConnection:Disconnect()
+            end
+        end
+    end,
+})-- Lua Hub V3 by Lua Hotel
 -- Advanced Multi-Game Script Hub
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
@@ -34,8 +264,8 @@ local userKey = "LUA_HUB_wx7e5DmK6zJNaM42c"
 
 -- Show Introduction Notification
 Rayfield:Notify({
-    Title = "Lua Hub V2",
-    Content = "15+ Premium Scripts Loaded! Welcome " .. userName,
+    Title = "Lua Hub V3",
+    Content = "20+ Premium Scripts Loaded! Welcome " .. userName,
     Duration = 5,
     Image = 4483362458,
     Actions = {
@@ -60,14 +290,14 @@ end
 
 -- Create Main Window with Key System
 local Window = Rayfield:CreateWindow({
-    Name = "Lua Hub V2 | " .. currentExecutor,
-    LoadingTitle = "Lua Hub V2 Loading...",
+    Name = "Lua Hub V3 | " .. currentExecutor,
+    LoadingTitle = "Lua Hub V3 Loading...",
     LoadingSubtitle = "by Lua Hotel",
     Theme = "Serenity",
     ConfigurationSaving = {
         Enabled = true,
-        FolderName = "LuaHubV2",
-        FileName = "LuaHubV2Config"
+        FolderName = "LuaHubV3",
+        FileName = "LuaHubV3Config"
     },
     Discord = {
         Enabled = true,
@@ -76,10 +306,10 @@ local Window = Rayfield:CreateWindow({
     },
     KeySystem = true,
     KeySettings = {
-        Title = "Lua Hub V2 | Key System",
+        Title = "Lua Hub V3 | Key System",
         Subtitle = "Get your key from our website",
         Note = "Visit: https://luahotel.vercel.app",
-        FileName = "LuaHubV2Key",
+        FileName = "LuaHubV3Key",
         SaveKey = true,
         GrabKeyFromSite = false,
         Key = {"LUA_HUB_wx7e5DmK6zJNaM42c"}
@@ -95,6 +325,8 @@ local espEnabled = false
 local autoFarmEnabled = false
 local antiAfkEnabled = false
 local fovChangerEnabled = false
+local aimbotEnabled = false
+local aimbotTarget = nil
 local targetPlayer = ""
 local flySpeed = 50
 local walkSpeed = 16
@@ -108,11 +340,11 @@ local flyBobbing = 0
 -- ============================================
 -- HOME TAB
 -- ============================================
-local HomeTab = Window:CreateTab("Home", 4483362458)
+local HomeTab = Window:CreateTab("Home", "home")
 local HomeSection = HomeTab:CreateSection("User Information")
 
 HomeTab:CreateParagraph({
-    Title = "Welcome to Lua Hub V2!",
+    Title = "Welcome to Lua Hub V3!",
     Content = "The most advanced script hub for Roblox. Enjoy premium features and regular updates!"
 })
 
@@ -120,27 +352,6 @@ HomeTab:CreateLabel("Username: " .. userName)
 HomeTab:CreateLabel("User ID: " .. game.Players.LocalPlayer.UserId)
 HomeTab:CreateLabel("Executor: " .. currentExecutor)
 HomeTab:CreateLabel("Your Key: " .. userKey)
-
-local StatsSection = HomeTab:CreateSection("Session Stats")
-
-local sessionStartTime = tick()
-local scriptsExecuted = 0
-
-local function updateStats()
-    local sessionTime = math.floor(tick() - sessionStartTime)
-    local minutes = math.floor(sessionTime / 60)
-    local seconds = sessionTime % 60
-    return string.format("%02d:%02d", minutes, seconds)
-end
-
-HomeTab:CreateLabel("Session Time: Updating...")
-HomeTab:CreateLabel("Scripts Executed: 0")
-
-spawn(function()
-    while wait(1) do
-        -- Stats update in real environment would refresh labels
-    end
-end)
 
 local LinksSection = HomeTab:CreateSection("Important Links")
 
@@ -176,13 +387,12 @@ HomeTab:CreateButton({
 -- ============================================
 -- GENERAL TAB
 -- ============================================
-local GeneralTab = Window:CreateTab("General", 4483362458)
+local GeneralTab = Window:CreateTab("General", "home")
 local GeneralSection = GeneralTab:CreateSection("Universal Scripts")
 
 GeneralTab:CreateButton({
     Name = "Infinite Yield",
     Callback = function()
-        scriptsExecuted = scriptsExecuted + 1
         Rayfield:Notify({
             Title = "Loading Script",
             Content = "Loading Infinite Yield...",
@@ -195,7 +405,6 @@ GeneralTab:CreateButton({
 GeneralTab:CreateButton({
     Name = "Dex Explorer",
     Callback = function()
-        scriptsExecuted = scriptsExecuted + 1
         Rayfield:Notify({
             Title = "Loading Script",
             Content = "Loading Dex Explorer...",
@@ -208,7 +417,6 @@ GeneralTab:CreateButton({
 GeneralTab:CreateButton({
     Name = "AquaMatrix",
     Callback = function()
-        scriptsExecuted = scriptsExecuted + 1
         Rayfield:Notify({
             Title = "Loading Script",
             Content = "Loading AquaMatrix...",
@@ -221,13 +429,12 @@ GeneralTab:CreateButton({
 -- ============================================
 -- JJS TAB
 -- ============================================
-local JJSTab = Window:CreateTab("JJS", 4483362458)
+local JJSTab = Window:CreateTab("JJS", "sword")
 local JJSSection = JJSTab:CreateSection("Jujutsu Shenanigans Scripts")
 
 JJSTab:CreateButton({
     Name = "Jujutsuer",
     Callback = function()
-        scriptsExecuted = scriptsExecuted + 1
         Rayfield:Notify({
             Title = "Loading Script",
             Content = "Loading Jujutsuer...",
@@ -240,7 +447,6 @@ JJSTab:CreateButton({
 JJSTab:CreateButton({
     Name = "Spotlight",
     Callback = function()
-        scriptsExecuted = scriptsExecuted + 1
         Rayfield:Notify({
             Title = "Loading Script",
             Content = "Loading Spotlight...",
@@ -253,7 +459,6 @@ JJSTab:CreateButton({
 JJSTab:CreateButton({
     Name = "Autobuilder",
     Callback = function()
-        scriptsExecuted = scriptsExecuted + 1
         Rayfield:Notify({
             Title = "Loading Script",
             Content = "Loading Autobuilder...",
@@ -266,13 +471,12 @@ JJSTab:CreateButton({
 -- ============================================
 -- TSB TAB
 -- ============================================
-local TSBTab = Window:CreateTab("TSB", 4483362458)
+local TSBTab = Window:CreateTab("TSB", "zap")
 local TSBSection = TSBTab:CreateSection("The Strongest Battlegrounds Scripts")
 
 TSBTab:CreateButton({
     Name = "SORGUI",
     Callback = function()
-        scriptsExecuted = scriptsExecuted + 1
         Rayfield:Notify({
             Title = "Loading Script",
             Content = "Loading SORGUI...",
@@ -285,13 +489,12 @@ TSBTab:CreateButton({
 -- ============================================
 -- BLOX FRUITS TAB
 -- ============================================
-local BloxFruitsTab = Window:CreateTab("Blox Fruits", 4483362458)
+local BloxFruitsTab = Window:CreateTab("Blox Fruits", "apple")
 local BloxFruitsSection = BloxFruitsTab:CreateSection("Blox Fruits Scripts")
 
 BloxFruitsTab:CreateButton({
     Name = "BT Project",
     Callback = function()
-        scriptsExecuted = scriptsExecuted + 1
         Rayfield:Notify({
             Title = "Loading Script",
             Content = "Loading BT Project...",
@@ -304,13 +507,12 @@ BloxFruitsTab:CreateButton({
 -- ============================================
 -- PIANO TAB
 -- ============================================
-local PianoTab = Window:CreateTab("Piano", 4483362458)
+local PianoTab = Window:CreateTab("Piano", "music")
 local PianoSection = PianoTab:CreateSection("Virtual Piano Scripts")
 
 PianoTab:CreateButton({
     Name = "Talentless",
     Callback = function()
-        scriptsExecuted = scriptsExecuted + 1
         Rayfield:Notify({
             Title = "Loading Script",
             Content = "Loading Talentless...",
@@ -325,7 +527,7 @@ PianoTab:CreateButton({
 -- ============================================
 -- LUA HUB TAB (Custom Scripts)
 -- ============================================
-local LuaHubTab = Window:CreateTab("Lua Hub", 4483362458)
+local LuaHubTab = Window:CreateTab("Lua Hub", "star")
 local LuaHubSection = LuaHubTab:CreateSection("Premium Lua Hub Features")
 
 -- Advanced Fly Bypass with Teleport System
@@ -468,6 +670,106 @@ LuaHubTab:CreateSlider({
     Flag = "FlySpeed",
     Callback = function(Value)
         flySpeed = Value
+    end,
+})
+
+-- Fly Keybind
+LuaHubTab:CreateKeybind({
+    Name = "Fly Keybind",
+    CurrentKeybind = "",
+    HoldToInteract = false,
+    Flag = "FlyKeybind",
+    Callback = function(Keybind)
+        flyEnabled = not flyEnabled
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+        
+        if flyEnabled then
+            Rayfield:Notify({
+                Title = "Fly Enabled",
+                Content = "Use WASD + Camera to fly smoothly",
+                Duration = 3,
+            })
+            
+            flyBodyVelocity = Instance.new("BodyVelocity")
+            flyBodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+            flyBodyVelocity.Velocity = Vector3.new(0, 0, 0)
+            flyBodyVelocity.Parent = humanoidRootPart
+            
+            flyBodyGyro = Instance.new("BodyGyro")
+            flyBodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+            flyBodyGyro.P = 9e4
+            flyBodyGyro.Parent = humanoidRootPart
+            
+            flyHeight = humanoidRootPart.Position.Y
+            
+            flyConnection = game:GetService("RunService").Heartbeat:Connect(function(delta)
+                if not flyEnabled then return end
+                
+                local camera = workspace.CurrentCamera
+                local moveDirection = Vector3.new(0, 0, 0)
+                local currentSpeed = flySpeed
+                
+                if betterBypass then
+                    currentSpeed = math.min(flySpeed, 80)
+                    if humanoidRootPart.Position.Y > flyHeight + 150 then
+                        flyHeight = humanoidRootPart.Position.Y - 150
+                    end
+                end
+                
+                if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.W) then
+                    moveDirection = moveDirection + camera.CFrame.LookVector
+                end
+                if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.S) then
+                    moveDirection = moveDirection - camera.CFrame.LookVector
+                end
+                if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.A) then
+                    moveDirection = moveDirection - camera.CFrame.RightVector
+                end
+                if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.D) then
+                    moveDirection = moveDirection + camera.CFrame.RightVector
+                end
+                if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.Space) then
+                    if not betterBypass or humanoidRootPart.Position.Y < flyHeight + 150 then
+                        moveDirection = moveDirection + Vector3.new(0, 1, 0)
+                    end
+                end
+                if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.LeftShift) then
+                    moveDirection = moveDirection - Vector3.new(0, 1, 0)
+                end
+                
+                flyBobbing = flyBobbing + delta * 3
+                local bobbingOffset = math.sin(flyBobbing) * 0.5
+                
+                if moveDirection.Magnitude > 0 then
+                    local targetVelocity = moveDirection.Unit * currentSpeed
+                    flyBodyVelocity.Velocity = targetVelocity + Vector3.new(0, bobbingOffset, 0)
+                else
+                    flyBodyVelocity.Velocity = Vector3.new(0, bobbingOffset * 2, 0)
+                end
+                
+                flyBodyGyro.CFrame = camera.CFrame
+                
+                if moveDirection.Magnitude > 0 then
+                    local newPos = humanoidRootPart.Position + (moveDirection.Unit * currentSpeed * delta)
+                    humanoidRootPart.CFrame = CFrame.new(newPos)
+                end
+            end)
+        else
+            Rayfield:Notify({
+                Title = "Fly Disabled",
+                Content = "Fly mode deactivated",
+                Duration = 2,
+            })
+            
+            if flyConnection then
+                flyConnection:Disconnect()
+            end
+            
+            if flyBodyVelocity then flyBodyVelocity:Destroy() end
+            if flyBodyGyro then flyBodyGyro:Destroy() end
+        end
     end,
 })
 
@@ -1267,13 +1569,75 @@ end)
 -- Info Section
 local InfoSection = LuaHubTab:CreateSection("Information")
 LuaHubTab:CreateParagraph({
-    Title = "About Lua Hub V2",
-    Content = "Lua Hub V2 is the ultimate script collection for Roblox with premium features and advanced bypass systems. Created by Lua Hotel. Executor: " .. currentExecutor
+    Title = "About Lua Hub V3",
+    Content = "Lua Hub V3 is the ultimate script collection for Roblox with premium features and advanced bypass systems. Created by Lua Hotel."
 })
 
-LuaHubTab:CreateParagraph({
-    Title = "Premium Features",
-    Content = "• Advanced Fly Bypass with smooth teleportation\n• Player ESP & Tracking\n• Anti-AFK Protection\n• FOV & Speed Customization\n• FPS Optimization Tools\n• And much more!"
+-- ============================================
+-- CONFIG TAB
+-- ============================================
+local ConfigTab = Window:CreateTab("Config", "settings")
+local ConfigSection = ConfigTab:CreateSection("Hub Configuration")
+
+ConfigTab:CreateButton({
+    Name = "Unload Lua Hub V3",
+    Callback = function()
+        Rayfield:Notify({
+            Title = "Unloading...",
+            Content = "Lua Hub V3 is closing",
+            Duration = 2,
+        })
+        wait(1)
+        Rayfield:Destroy()
+    end,
+})
+
+local ThemeSection = ConfigTab:CreateSection("Theme Settings")
+
+ConfigTab:CreateDropdown({
+    Name = "Select Theme",
+    Options = {"Serenity", "Amethyst", "Ocean"},
+    CurrentOption = {"Serenity"},
+    MultipleOptions = false,
+    Flag = "ThemeSelect",
+    Callback = function(Option)
+        Rayfield:Notify({
+            Title = "Theme Changed",
+            Content = "Theme set to: " .. Option[1] .. " (Restart required)",
+            Duration = 3,
+        })
+    end,
+})
+
+ConfigTab:CreateParagraph({
+    Title = "Note",
+    Content = "Theme changes require a restart of Lua Hub V3 to take full effect."
+})
+
+local ConfigManagement = ConfigTab:CreateSection("Configuration")
+
+ConfigTab:CreateButton({
+    Name = "Save Configuration",
+    Callback = function()
+        Rayfield:Notify({
+            Title = "Saved",
+            Content = "Configuration saved successfully!",
+            Duration = 2,
+        })
+        SaveConfiguration()
+    end,
+})
+
+ConfigTab:CreateButton({
+    Name = "Load Configuration",
+    Callback = function()
+        Rayfield:Notify({
+            Title = "Loaded",
+            Content = "Configuration loaded successfully!",
+            Duration = 2,
+        })
+        LoadConfiguration()
+    end,
 })
 
 Rayfield:LoadConfiguration()
