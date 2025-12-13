@@ -1,237 +1,12 @@
--- PVP Section
-local PVPSection = LuaHubTab:CreateSection("PVP Features")
-
--- Aimbot
-local aimbotConnection
-local mouse = game.Players.LocalPlayer:GetMouse()
-
-LuaHubTab:CreateKeybind({
-    Name = "Aimbot (Right Click to Target)",
-    CurrentKeybind = "V",
-    HoldToInteract = false,
-    Flag = "AimbotKeybind",
-    Callback = function(Keybind)
-        aimbotEnabled = not aimbotEnabled
-        
-        if aimbotEnabled then
-            Rayfield:Notify({
-                Title = "Aimbot Enabled",
-                Content = "Right click on a player to lock on!",
-                Duration = 3,
-            })
-            
-            -- Right click detection
-            mouse.Button2Down:Connect(function()
-                if not aimbotEnabled then return end
-                
-                local target = mouse.Target
-                if target and target.Parent then
-                    local humanoid = target.Parent:FindFirstChildOfClass("Humanoid")
-                    if humanoid then
-                        aimbotTarget = target.Parent
-                        Rayfield:Notify({
-                            Title = "Target Locked",
-                            Content = "Locked onto: " .. aimbotTarget.Name,
-                            Duration = 2,
-                        })
-                    end
-                end
-            end)
-            
-            aimbotConnection = game:GetService("RunService").RenderStepped:Connect(function()
-                if not aimbotEnabled or not aimbotTarget then return end
-                
-                local player = game.Players.LocalPlayer
-                local character = player.Character
-                if not character then return end
-                
-                local targetHrp = aimbotTarget:FindFirstChild("HumanoidRootPart")
-                local hrp = character:FindFirstChild("HumanoidRootPart")
-                
-                if targetHrp and hrp then
-                    -- Aim camera at target
-                    workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, targetHrp.Position)
-                    
-                    -- Rotate body to face target
-                    hrp.CFrame = CFrame.new(hrp.Position, Vector3.new(targetHrp.Position.X, hrp.Position.Y, targetHrp.Position.Z))
-                end
-            end)
-        else
-            Rayfield:Notify({
-                Title = "Aimbot Disabled",
-                Content = "Aimbot deactivated",
-                Duration = 2,
-            })
-            
-            if aimbotConnection then
-                aimbotConnection:Disconnect()
-            end
-            aimbotTarget = nil
-        end
-    end,
-})
-
--- Auto Farm for Battleground Games
-local autoFarmConnection
-
-LuaHubTab:CreateToggle({
-    Name = "Auto Farm (Battleground Games)",
-    CurrentValue = false,
-    Flag = "AutoFarm",
-    Callback = function(Value)
-        autoFarmEnabled = Value
-        
-        if autoFarmEnabled then
-            Rayfield:Notify({
-                Title = "Auto Farm ON",
-                Content = "Farming nearest player with abilities!",
-                Duration = 3,
-            })
-            
-            autoFarmConnection = game:GetService("RunService").Heartbeat:Connect(function()
-                if not autoFarmEnabled then return end
-                
-                local player = game.Players.LocalPlayer
-                local character = player.Character
-                if not character then return end
-                
-                local hrp = character:FindFirstChild("HumanoidRootPart")
-                if not hrp then return end
-                
-                -- Find nearest player
-                local nearestPlayer = nil
-                local nearestDistance = math.huge
-                
-                for _, otherPlayer in pairs(game.Players:GetPlayers()) do
-                    if otherPlayer ~= player and otherPlayer.Character then
-                        local otherHrp = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
-                        if otherHrp then
-                            local distance = (hrp.Position - otherHrp.Position).Magnitude
-                            if distance < nearestDistance then
-                                nearestDistance = distance
-                                nearestPlayer = otherPlayer
-                            end
-                        end
-                    end
-                end
-                
-                if nearestPlayer and nearestPlayer.Character then
-                    local targetHrp = nearestPlayer.Character:FindFirstChild("HumanoidRootPart")
-                    if targetHrp then
-                        local targetPos = targetHrp.Position
-                        local distance = (hrp.Position - targetPos).Magnitude
-                        
-                        -- Move towards player if too far
-                        if distance > 6 then
-                            local direction = (targetPos - hrp.Position).Unit
-                            hrp.CFrame = hrp.CFrame + (direction * 0.5)
-                        end
-                        
-                        -- Keep distance between 4-6 studs
-                        if distance > 4 and distance < 6 then
-                            -- Attack (M1)
-                            mouse1press()
-                            wait(0.1)
-                            mouse1release()
-                            
-                            -- Use abilities 1-4
-                            for i = 1, 4 do
-                                local key = Enum.KeyCode["Key" .. i]
-                                game:GetService("VirtualInputManager"):SendKeyEvent(true, key, false, game)
-                                wait(0.1)
-                                game:GetService("VirtualInputManager"):SendKeyEvent(false, key, false, game)
-                                wait(0.3)
-                            end
-                        end
-                    end
-                end
-            end)
-        else
-            Rayfield:Notify({
-                Title = "Auto Farm OFF",
-                Content = "Auto farm deactivated",
-                Duration = 2,
-            })
-            
-            if autoFarmConnection then
-                autoFarmConnection:Disconnect()
-            end
-        end
-    end,
-})
-
--- Kill Aura (for PVP games)
-local killAuraEnabled = false
-local killAuraConnection
-
-LuaHubTab:CreateSlider({
-    Name = "Kill Aura Range",
-    Range = {5, 30},
-    Increment = 1,
-    Suffix = " studs",
-    CurrentValue = 15,
-    Flag = "KillAuraRange",
-    Callback = function(Value)
-        -- Range stored for kill aura
-    end,
-})
-
-LuaHubTab:CreateToggle({
-    Name = "Kill Aura",
-    CurrentValue = false,
-    Flag = "KillAura",
-    Callback = function(Value)
-        killAuraEnabled = Value
-        local range = 15
-        
-        if killAuraEnabled then
-            Rayfield:Notify({
-                Title = "Kill Aura ON",
-                Content = "Attacking all nearby players!",
-                Duration = 2,
-            })
-            
-            killAuraConnection = game:GetService("RunService").Heartbeat:Connect(function()
-                if not killAuraEnabled then return end
-                
-                local player = game.Players.LocalPlayer
-                local character = player.Character
-                if not character then return end
-                
-                local hrp = character:FindFirstChild("HumanoidRootPart")
-                if not hrp then return end
-                
-                for _, otherPlayer in pairs(game.Players:GetPlayers()) do
-                    if otherPlayer ~= player and otherPlayer.Character then
-                        local otherHrp = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
-                        if otherHrp then
-                            local distance = (hrp.Position - otherHrp.Position).Magnitude
-                            if distance <= range then
-                                -- Attack player in range
-                                mouse1press()
-                                wait(0.05)
-                                mouse1release()
-                            end
-                        end
-                    end
-                end
-            end)
-        else
-            Rayfield:Notify({
-                Title = "Kill Aura OFF",
-                Content = "Kill aura deactivated",
-                Duration = 2,
-            })
-            
-            if killAuraConnection then
-                killAuraConnection:Disconnect()
-            end
-        end
-    end,
-})-- Lua Hub V3 by Lua Hotel
+-- Lua Hub V3 by Lua Hotel
 -- Advanced Multi-Game Script Hub
 
+-- Load Rayfield Library FIRST
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- Get user info
+local userName = game.Players.LocalPlayer.Name
+local userKey = "LUA_HUB_wx7e5DmK6zJNaM42c"
 
 -- Executor Detection
 local function getExecutor()
@@ -259,34 +34,6 @@ local function getExecutor()
 end
 
 local currentExecutor = getExecutor()
-local userName = game.Players.LocalPlayer.Name
-local userKey = "LUA_HUB_wx7e5DmK6zJNaM42c"
-
--- Show Introduction Notification
-Rayfield:Notify({
-    Title = "Lua Hub V3",
-    Content = "20+ Premium Scripts Loaded! Welcome " .. userName,
-    Duration = 5,
-    Image = 4483362458,
-    Actions = {
-        Ignore = {
-            Name = "Let's Go!",
-            Callback = function()
-                print("User acknowledged introduction")
-            end
-        },
-    },
-})
-
--- Executor Warning for Xeno/Solara
-if currentExecutor:lower():find("xeno") or currentExecutor:lower():find("solara") then
-    Rayfield:Notify({
-        Title = "Executor Warning",
-        Content = "Some scripts may not work properly on " .. currentExecutor,
-        Duration = 6,
-        Image = 4483362458,
-    })
-end
 
 -- Create Main Window with Key System
 local Window = Rayfield:CreateWindow({
@@ -316,6 +63,32 @@ local Window = Rayfield:CreateWindow({
     }
 })
 
+-- Show Introduction Notification
+Rayfield:Notify({
+    Title = "Lua Hub V3",
+    Content = "20+ Premium Scripts Loaded! Welcome " .. userName,
+    Duration = 5,
+    Image = 4483362458,
+    Actions = {
+        Ignore = {
+            Name = "Let's Go!",
+            Callback = function()
+                print("User acknowledged introduction")
+            end
+        },
+    },
+})
+
+-- Executor Warning for Xeno/Solara
+if currentExecutor:lower():find("xeno") or currentExecutor:lower():find("solara") then
+    Rayfield:Notify({
+        Title = "Executor Warning",
+        Content = "Some scripts may not work properly on " .. currentExecutor,
+        Duration = 6,
+        Image = 4483362458,
+    })
+end
+
 -- Variables for custom scripts
 local flyEnabled = false
 local betterBypass = false
@@ -324,7 +97,6 @@ local followEnabled = false
 local espEnabled = false
 local autoFarmEnabled = false
 local antiAfkEnabled = false
-local fovChangerEnabled = false
 local aimbotEnabled = false
 local aimbotTarget = nil
 local targetPlayer = ""
@@ -336,6 +108,9 @@ local followType = "Behind"
 local fovValue = 70
 local flyHeight = 0
 local flyBobbing = 0
+local flyConnection
+local flyBodyVelocity
+local flyBodyGyro
 
 -- ============================================
 -- HOME TAB
@@ -531,10 +306,6 @@ local LuaHubTab = Window:CreateTab("Lua Hub", "star")
 local LuaHubSection = LuaHubTab:CreateSection("Premium Lua Hub Features")
 
 -- Advanced Fly Bypass with Teleport System
-local flyConnection
-local flyBodyVelocity
-local flyBodyGyro
-
 LuaHubTab:CreateToggle({
     Name = "Fly Bypass (Advanced)",
     CurrentValue = false,
@@ -552,7 +323,6 @@ LuaHubTab:CreateToggle({
                 Duration = 3,
             })
             
-            -- Create smooth floating effect
             flyBodyVelocity = Instance.new("BodyVelocity")
             flyBodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
             flyBodyVelocity.Velocity = Vector3.new(0, 0, 0)
@@ -572,10 +342,8 @@ LuaHubTab:CreateToggle({
                 local moveDirection = Vector3.new(0, 0, 0)
                 local currentSpeed = flySpeed
                 
-                -- Apply better bypass limits
                 if betterBypass then
-                    currentSpeed = math.min(flySpeed, 80) -- Cap speed
-                    -- Limit height
+                    currentSpeed = math.min(flySpeed, 80)
                     if humanoidRootPart.Position.Y > flyHeight + 150 then
                         flyHeight = humanoidRootPart.Position.Y - 150
                     end
@@ -602,11 +370,9 @@ LuaHubTab:CreateToggle({
                     moveDirection = moveDirection - Vector3.new(0, 1, 0)
                 end
                 
-                -- Smooth bobbing effect
                 flyBobbing = flyBobbing + delta * 3
                 local bobbingOffset = math.sin(flyBobbing) * 0.5
                 
-                -- Apply movement with bobbing
                 if moveDirection.Magnitude > 0 then
                     local targetVelocity = moveDirection.Unit * currentSpeed
                     flyBodyVelocity.Velocity = targetVelocity + Vector3.new(0, bobbingOffset, 0)
@@ -616,7 +382,6 @@ LuaHubTab:CreateToggle({
                 
                 flyBodyGyro.CFrame = camera.CFrame
                 
-                -- Smooth position updates (teleport-like)
                 if moveDirection.Magnitude > 0 then
                     local newPos = humanoidRootPart.Position + (moveDirection.Unit * currentSpeed * delta)
                     humanoidRootPart.CFrame = CFrame.new(newPos)
@@ -841,7 +606,6 @@ LuaHubTab:CreateToggle({
             local player = game.Players.LocalPlayer
             local character = player.Character or player.CharacterAdded:Wait()
             
-            -- Store original collision settings
             for _, part in pairs(character:GetDescendants()) do
                 if part:IsA("BasePart") then
                     bypassParts[part] = part.CanCollide
@@ -855,7 +619,6 @@ LuaHubTab:CreateToggle({
                     for _, part in pairs(char:GetDescendants()) do
                         if part:IsA("BasePart") then
                             part.CanCollide = false
-                            -- Advanced bypass: prevent velocity detection
                             if part:IsA("BasePart") and part.Name == "HumanoidRootPart" then
                                 part.Velocity = Vector3.new(0, 0, 0)
                                 part.RotVelocity = Vector3.new(0, 0, 0)
@@ -863,10 +626,9 @@ LuaHubTab:CreateToggle({
                         end
                     end
                     
-                    -- Extra bypass for humanoid collision
                     local humanoid = char:FindFirstChildOfClass("Humanoid")
                     if humanoid then
-                        humanoid:ChangeState(11) -- Physics state for bypass
+                        humanoid:ChangeState(11)
                     end
                 end
             end)
@@ -881,7 +643,6 @@ LuaHubTab:CreateToggle({
                 noclipConnection:Disconnect()
             end
             
-            -- Restore original collision settings
             local player = game.Players.LocalPlayer
             local character = player.Character
             if character then
@@ -1129,6 +890,228 @@ LuaHubTab:CreateButton({
     end,
 })
 
+-- PVP Section
+local PVPSection = LuaHubTab:CreateSection("PVP Features")
+
+-- Aimbot
+local aimbotConnection
+local mouse = game.Players.LocalPlayer:GetMouse()
+
+LuaHubTab:CreateKeybind({
+    Name = "Aimbot (Right Click to Target)",
+    CurrentKeybind = "V",
+    HoldToInteract = false,
+    Flag = "AimbotKeybind",
+    Callback = function(Keybind)
+        aimbotEnabled = not aimbotEnabled
+        
+        if aimbotEnabled then
+            Rayfield:Notify({
+                Title = "Aimbot Enabled",
+                Content = "Right click on a player to lock on!",
+                Duration = 3,
+            })
+            
+            mouse.Button2Down:Connect(function()
+                if not aimbotEnabled then return end
+                
+                local target = mouse.Target
+                if target and target.Parent then
+                    local humanoid = target.Parent:FindFirstChildOfClass("Humanoid")
+                    if humanoid then
+                        aimbotTarget = target.Parent
+                        Rayfield:Notify({
+                            Title = "Target Locked",
+                            Content = "Locked onto: " .. aimbotTarget.Name,
+                            Duration = 2,
+                        })
+                    end
+                end
+            end)
+            
+            aimbotConnection = game:GetService("RunService").RenderStepped:Connect(function()
+                if not aimbotEnabled or not aimbotTarget then return end
+                
+                local player = game.Players.LocalPlayer
+                local character = player.Character
+                if not character then return end
+                
+                local targetHrp = aimbotTarget:FindFirstChild("HumanoidRootPart")
+                local hrp = character:FindFirstChild("HumanoidRootPart")
+                
+                if targetHrp and hrp then
+                    workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, targetHrp.Position)
+                    hrp.CFrame = CFrame.new(hrp.Position, Vector3.new(targetHrp.Position.X, hrp.Position.Y, targetHrp.Position.Z))
+                end
+            end)
+        else
+            Rayfield:Notify({
+                Title = "Aimbot Disabled",
+                Content = "Aimbot deactivated",
+                Duration = 2,
+            })
+            
+            if aimbotConnection then
+                aimbotConnection:Disconnect()
+            end
+            aimbotTarget = nil
+        end
+    end,
+})
+
+-- Auto Farm
+local autoFarmConnection
+
+LuaHubTab:CreateToggle({
+    Name = "Auto Farm (Battleground Games)",
+    CurrentValue = false,
+    Flag = "AutoFarm",
+    Callback = function(Value)
+        autoFarmEnabled = Value
+        
+        if autoFarmEnabled then
+            Rayfield:Notify({
+                Title = "Auto Farm ON",
+                Content = "Farming nearest player!",
+                Duration = 3,
+            })
+            
+            autoFarmConnection = game:GetService("RunService").Heartbeat:Connect(function()
+                if not autoFarmEnabled then return end
+                
+                local player = game.Players.LocalPlayer
+                local character = player.Character
+                if not character then return end
+                
+                local hrp = character:FindFirstChild("HumanoidRootPart")
+                if not hrp then return end
+                
+                local nearestPlayer = nil
+                local nearestDistance = math.huge
+                
+                for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+                    if otherPlayer ~= player and otherPlayer.Character then
+                        local otherHrp = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+                        if otherHrp then
+                            local distance = (hrp.Position - otherHrp.Position).Magnitude
+                            if distance < nearestDistance then
+                                nearestDistance = distance
+                                nearestPlayer = otherPlayer
+                            end
+                        end
+                    end
+                end
+                
+                if nearestPlayer and nearestPlayer.Character then
+                    local targetHrp = nearestPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    if targetHrp then
+                        local targetPos = targetHrp.Position
+                        local distance = (hrp.Position - targetPos).Magnitude
+                        
+                        if distance > 6 then
+                            local direction = (targetPos - hrp.Position).Unit
+                            hrp.CFrame = hrp.CFrame + (direction * 0.5)
+                        end
+                        
+                        if distance > 4 and distance < 6 then
+                            mouse1press()
+                            wait(0.1)
+                            mouse1release()
+                            
+                            for i = 1, 4 do
+                                local key = Enum.KeyCode["Key" .. i]
+                                game:GetService("VirtualInputManager"):SendKeyEvent(true, key, false, game)
+                                wait(0.1)
+                                game:GetService("VirtualInputManager"):SendKeyEvent(false, key, false, game)
+                                wait(0.3)
+                            end
+                        end
+                    end
+                end
+            end)
+        else
+            Rayfield:Notify({
+                Title = "Auto Farm OFF",
+                Content = "Auto farm deactivated",
+                Duration = 2,
+            })
+            
+            if autoFarmConnection then
+                autoFarmConnection:Disconnect()
+            end
+        end
+    end,
+})
+
+-- Kill Aura
+local killAuraEnabled = false
+local killAuraConnection
+local killAuraRange = 15
+
+LuaHubTab:CreateSlider({
+    Name = "Kill Aura Range",
+    Range = {5, 30},
+    Increment = 1,
+    Suffix = " studs",
+    CurrentValue = 15,
+    Flag = "KillAuraRange",
+    Callback = function(Value)
+        killAuraRange = Value
+    end,
+})
+
+LuaHubTab:CreateToggle({
+    Name = "Kill Aura",
+    CurrentValue = false,
+    Flag = "KillAura",
+    Callback = function(Value)
+        killAuraEnabled = Value
+        
+        if killAuraEnabled then
+            Rayfield:Notify({
+                Title = "Kill Aura ON",
+                Content = "Attacking all nearby players!",
+                Duration = 2,
+            })
+            
+            killAuraConnection = game:GetService("RunService").Heartbeat:Connect(function()
+                if not killAuraEnabled then return end
+                
+                local player = game.Players.LocalPlayer
+                local character = player.Character
+                if not character then return end
+                
+                local hrp = character:FindFirstChild("HumanoidRootPart")
+                if not hrp then return end
+                
+                for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+                    if otherPlayer ~= player and otherPlayer.Character then
+                        local otherHrp = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+                        if otherHrp then
+                            local distance = (hrp.Position - otherHrp.Position).Magnitude
+                            if distance <= killAuraRange then
+                                mouse1press()
+                                wait(0.05)
+                                mouse1release()
+                            end
+                        end
+                    end
+                end
+            end)
+        else
+            Rayfield:Notify({
+                Title = "Kill Aura OFF",
+                Content = "Kill aura deactivated",
+                Duration = 2,
+            })
+            
+            if killAuraConnection then
+                killAuraConnection:Disconnect()
+            end
+        end
+    end,
+})
+
 -- Hitbox Expander
 local hitboxSize = 10
 local hitboxEnabled = false
@@ -1251,47 +1234,6 @@ LuaHubTab:CreateButton({
     end,
 })
 
--- Auto Sprint
-local autoSprintEnabled = false
-
-LuaHubTab:CreateToggle({
-    Name = "Auto Sprint",
-    CurrentValue = false,
-    Flag = "AutoSprint",
-    Callback = function(Value)
-        autoSprintEnabled = Value
-        
-        if autoSprintEnabled then
-            Rayfield:Notify({
-                Title = "Auto Sprint ON",
-                Content = "You will always sprint when moving",
-                Duration = 2,
-            })
-            
-            game:GetService("RunService").Heartbeat:Connect(function()
-                if not autoSprintEnabled then return end
-                
-                local player = game.Players.LocalPlayer
-                local character = player.Character
-                if character then
-                    local humanoid = character:FindFirstChildOfClass("Humanoid")
-                    if humanoid and humanoid.MoveDirection.Magnitude > 0 then
-                        humanoid.WalkSpeed = walkSpeed * 1.5
-                    else
-                        humanoid.WalkSpeed = walkSpeed
-                    end
-                end
-            end)
-        else
-            Rayfield:Notify({
-                Title = "Auto Sprint OFF",
-                Content = "Sprint disabled",
-                Duration = 2,
-            })
-        end
-    end,
-})
-
 -- Click TP
 local clickTpEnabled = false
 local clickConnection
@@ -1309,8 +1251,6 @@ LuaHubTab:CreateToggle({
                 Content = "Hold CTRL and click to teleport!",
                 Duration = 3,
             })
-            
-            local mouse = game.Players.LocalPlayer:GetMouse()
             
             clickConnection = mouse.Button1Down:Connect(function()
                 if not clickTpEnabled then return end
@@ -1348,7 +1288,7 @@ LuaHubTab:CreateToggle({
     end,
 })
 
--- Follow Player GUI
+-- Follow Player
 local FollowSection = LuaHubTab:CreateSection("Follow Player System")
 
 LuaHubTab:CreateInput({
@@ -1624,7 +1564,6 @@ ConfigTab:CreateButton({
             Content = "Configuration saved successfully!",
             Duration = 2,
         })
-        SaveConfiguration()
     end,
 })
 
@@ -1636,7 +1575,6 @@ ConfigTab:CreateButton({
             Content = "Configuration loaded successfully!",
             Duration = 2,
         })
-        LoadConfiguration()
     end,
 })
 
