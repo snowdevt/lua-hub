@@ -1,18 +1,20 @@
--- Lua Hub V3 by Lua Hotel
--- Advanced Multi-Game Script Hub
+-- Lua Hub V4 by Lua Hotel
+-- Advanced Multi-Game Script Hub - FINAL UPDATE
 
 -- Load Rayfield Library FIRST
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 -- Get user info
 local userName = game.Players.LocalPlayer.Name
-local userKey = "LUA_HUB_wx7e5DmK6zJNaM42c"
+local userKey = "nomorekey"
 
 -- Executor Detection
 local function getExecutor()
     local executors = {
         ["Xeno"] = identifyexecutor and identifyexecutor():lower():find("xeno"),
         ["Solara"] = identifyexecutor and identifyexecutor():lower():find("solara"),
+        ["Volcano"] = identifyexecutor and identifyexecutor():lower():find("volcano"),
+        ["Delta"] = identifyexecutor and identifyexecutor():lower():find("delta"),
         ["Synapse X"] = syn and true,
         ["Script-Ware"] = SCRIPT_WARE_LOADED and true,
         ["KRNL"] = KRNL_LOADED and true,
@@ -37,14 +39,14 @@ local currentExecutor = getExecutor()
 
 -- Create Main Window with Key System
 local Window = Rayfield:CreateWindow({
-    Name = "Lua Hub V3 | " .. currentExecutor,
-    LoadingTitle = "Lua Hub V3 Loading...",
-    LoadingSubtitle = "by Lua Hotel",
+    Name = "Lua Hub V4 | " .. currentExecutor,
+    LoadingTitle = "Lua Hub V4 Loading...",
+    LoadingSubtitle = "by Lua Hotel - FINAL UPDATE",
     Theme = "Serenity",
     ConfigurationSaving = {
         Enabled = true,
-        FolderName = "LuaHubV3",
-        FileName = "LuaHubV3Config"
+        FolderName = "LuaHubV4",
+        FileName = "LuaHubV4Config"
     },
     Discord = {
         Enabled = true,
@@ -53,20 +55,20 @@ local Window = Rayfield:CreateWindow({
     },
     KeySystem = true,
     KeySettings = {
-        Title = "Lua Hub V3 | Key System",
-        Subtitle = "Get your key from our website",
-        Note = "Visit: https://luahotel.vercel.app",
-        FileName = "LuaHubV3Key",
+        Title = "Lua Hub V4 | Key System",
+        Subtitle = "Use the key: nomorekey",
+        Note = "Key: nomorekey",
+        FileName = "LuaHubV4Key",
         SaveKey = true,
         GrabKeyFromSite = false,
-        Key = {"LUA_HUB_wx7e5DmK6zJNaM42c"}
+        Key = {"nomorekey"}
     }
 })
 
 -- Show Introduction Notification
 Rayfield:Notify({
-    Title = "Lua Hub V3",
-    Content = "20+ Premium Scripts Loaded! Welcome " .. userName,
+    Title = "Lua Hub V4 - FINAL UPDATE",
+    Content = "25+ Premium Features! Welcome " .. userName,
     Duration = 5,
     Image = 4483362458,
     Actions = {
@@ -91,6 +93,7 @@ end
 
 -- Variables for custom scripts
 local flyEnabled = false
+local vflyEnabled = false
 local betterBypass = false
 local noclipEnabled = false
 local followEnabled = false
@@ -99,8 +102,10 @@ local autoFarmEnabled = false
 local antiAfkEnabled = false
 local aimbotEnabled = false
 local aimbotTarget = nil
+local aimbotHighlight = nil
 local targetPlayer = ""
 local flySpeed = 50
+local vflySpeed = 100
 local walkSpeed = 16
 local jumpPower = 50
 local followDistance = 3
@@ -109,6 +114,7 @@ local fovValue = 70
 local flyHeight = 0
 local flyBobbing = 0
 local flyConnection
+local vflyConnection
 local flyBodyVelocity
 local flyBodyGyro
 
@@ -119,8 +125,8 @@ local HomeTab = Window:CreateTab("Home", "home")
 local HomeSection = HomeTab:CreateSection("User Information")
 
 HomeTab:CreateParagraph({
-    Title = "Welcome to Lua Hub V3!",
-    Content = "The most advanced script hub for Roblox. Enjoy premium features and regular updates!"
+    Title = "Welcome to Lua Hub V4!",
+    Content = "The FINAL UPDATE with 25+ premium features! This is the last major feature update. Future updates will focus on new game scripts."
 })
 
 HomeTab:CreateLabel("Username: " .. userName)
@@ -428,7 +434,7 @@ LuaHubTab:CreateToggle({
 
 LuaHubTab:CreateSlider({
     Name = "Fly Speed",
-    Range = {10, 200},
+    Range = {10, 500},
     Increment = 5,
     Suffix = " Speed",
     CurrentValue = 50,
@@ -535,6 +541,90 @@ LuaHubTab:CreateKeybind({
             if flyBodyVelocity then flyBodyVelocity:Destroy() end
             if flyBodyGyro then flyBodyGyro:Destroy() end
         end
+    end,
+})
+
+-- Vehicle Fly (VFly)
+local VehicleSection = LuaHubTab:CreateSection("Lua Hub Simple")
+
+LuaHubTab:CreateToggle({
+    Name = "Vehicle Fly (VFly)",
+    CurrentValue = false,
+    Flag = "VFlyToggle",
+    Callback = function(Value)
+        vflyEnabled = Value
+        
+        if vflyEnabled then
+            Rayfield:Notify({
+                Title = "VFly Enabled",
+                Content = "Fly with your vehicle using WASD!",
+                Duration = 3,
+            })
+            
+            vflyConnection = game:GetService("RunService").Heartbeat:Connect(function()
+                if not vflyEnabled then return end
+                
+                local player = game.Players.LocalPlayer
+                local character = player.Character
+                if not character then return end
+                
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                if not humanoid or not humanoid.SeatPart then return end
+                
+                local vehicle = humanoid.SeatPart.Parent
+                local vehiclePart = vehicle:FindFirstChild("VehicleSeat") or humanoid.SeatPart
+                
+                if vehiclePart then
+                    local camera = workspace.CurrentCamera
+                    local moveDirection = Vector3.new(0, 0, 0)
+                    
+                    if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.W) then
+                        moveDirection = moveDirection + camera.CFrame.LookVector
+                    end
+                    if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.S) then
+                        moveDirection = moveDirection - camera.CFrame.LookVector
+                    end
+                    if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.A) then
+                        moveDirection = moveDirection - camera.CFrame.RightVector
+                    end
+                    if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.D) then
+                        moveDirection = moveDirection + camera.CFrame.RightVector
+                    end
+                    if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.Space) then
+                        moveDirection = moveDirection + Vector3.new(0, 1, 0)
+                    end
+                    if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.LeftShift) then
+                        moveDirection = moveDirection - Vector3.new(0, 1, 0)
+                    end
+                    
+                    if moveDirection.Magnitude > 0 then
+                        vehiclePart.CFrame = vehiclePart.CFrame + (moveDirection.Unit * vflySpeed * 0.016)
+                    end
+                end
+            end)
+        else
+            Rayfield:Notify({
+                Title = "VFly Disabled",
+                Content = "Vehicle fly deactivated",
+                Duration = 2,
+            })
+            
+            if vflyConnection then
+                vflyConnection:Disconnect()
+            end
+        end
+    end,
+})
+
+LuaHubTab:CreateSlider({
+    Name = "VFly Speed",
+    Range = {10, 500},
+    Increment = 10,
+    Suffix = " Speed",
+    CurrentValue = 100,
+    Flag = "VFlySpeed",
+    Callback = function(Value)
+        vflySpeed = Value
     end,
 })
 
@@ -920,6 +1010,21 @@ LuaHubTab:CreateKeybind({
                     local humanoid = target.Parent:FindFirstChildOfClass("Humanoid")
                     if humanoid then
                         aimbotTarget = target.Parent
+                        
+                        -- Remove old highlight
+                        if aimbotHighlight then
+                            aimbotHighlight:Destroy()
+                        end
+                        
+                        -- Create green highlight for locked target
+                        aimbotHighlight = Instance.new("Highlight")
+                        aimbotHighlight.Adornee = aimbotTarget
+                        aimbotHighlight.FillColor = Color3.fromRGB(0, 255, 0)
+                        aimbotHighlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                        aimbotHighlight.FillTransparency = 0.5
+                        aimbotHighlight.OutlineTransparency = 0
+                        aimbotHighlight.Parent = aimbotTarget
+                        
                         Rayfield:Notify({
                             Title = "Target Locked",
                             Content = "Locked onto: " .. aimbotTarget.Name,
@@ -942,6 +1047,13 @@ LuaHubTab:CreateKeybind({
                 if targetHrp and hrp then
                     workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, targetHrp.Position)
                     hrp.CFrame = CFrame.new(hrp.Position, Vector3.new(targetHrp.Position.X, hrp.Position.Y, targetHrp.Position.Z))
+                else
+                    -- Target lost, remove highlight
+                    if aimbotHighlight then
+                        aimbotHighlight:Destroy()
+                        aimbotHighlight = nil
+                    end
+                    aimbotTarget = nil
                 end
             end)
         else
@@ -953,6 +1065,10 @@ LuaHubTab:CreateKeybind({
             
             if aimbotConnection then
                 aimbotConnection:Disconnect()
+            end
+            if aimbotHighlight then
+                aimbotHighlight:Destroy()
+                aimbotHighlight = nil
             end
             aimbotTarget = nil
         end
@@ -1237,28 +1353,35 @@ LuaHubTab:CreateButton({
 -- Click TP
 local clickTpEnabled = false
 local clickConnection
+local isMobile = game:GetService("UserInputService").TouchEnabled
 
 LuaHubTab:CreateToggle({
-    Name = "Click TP (Hold Ctrl + Click)",
+    Name = isMobile and "Click/Tap TP" or "Click TP (Hold Ctrl + Click)",
     CurrentValue = false,
     Flag = "ClickTP",
     Callback = function(Value)
         clickTpEnabled = Value
         
         if clickTpEnabled then
-            Rayfield:Notify({
-                Title = "Click TP Enabled",
-                Content = "Hold CTRL and click to teleport!",
-                Duration = 3,
-            })
+            if isMobile then
+                Rayfield:Notify({
+                    Title = "Click TP Enabled",
+                    Content = "Tap anywhere to teleport!",
+                    Duration = 3,
+                })
+            else
+                Rayfield:Notify({
+                    Title = "Click TP Enabled",
+                    Content = "Hold CTRL and click to teleport!",
+                    Duration = 3,
+                })
+            end
             
-            clickConnection = mouse.Button1Down:Connect(function()
-                if not clickTpEnabled then return end
-                
-                local isCtrlHeld = game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.LeftControl) or 
-                                   game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.RightControl)
-                
-                if isCtrlHeld then
+            if isMobile then
+                -- Mobile: Simple tap to TP
+                clickConnection = mouse.Button1Down:Connect(function()
+                    if not clickTpEnabled then return end
+                    
                     local player = game.Players.LocalPlayer
                     local character = player.Character
                     if character then
@@ -1267,13 +1390,37 @@ LuaHubTab:CreateToggle({
                             hrp.CFrame = CFrame.new(mouse.Hit.Position)
                             Rayfield:Notify({
                                 Title = "Teleported",
-                                Content = "Teleported to cursor position",
+                                Content = "Teleported to tap position",
                                 Duration = 1,
                             })
                         end
                     end
-                end
-            end)
+                end)
+            else
+                -- PC: Ctrl + Click to TP
+                clickConnection = mouse.Button1Down:Connect(function()
+                    if not clickTpEnabled then return end
+                    
+                    local isCtrlHeld = game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.LeftControl) or 
+                                       game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.RightControl)
+                    
+                    if isCtrlHeld then
+                        local player = game.Players.LocalPlayer
+                        local character = player.Character
+                        if character then
+                            local hrp = character:FindFirstChild("HumanoidRootPart")
+                            if hrp then
+                                hrp.CFrame = CFrame.new(mouse.Hit.Position)
+                                Rayfield:Notify({
+                                    Title = "Teleported",
+                                    Content = "Teleported to cursor position",
+                                    Duration = 1,
+                                })
+                            end
+                        end
+                    end
+                end)
+            end
         else
             Rayfield:Notify({
                 Title = "Click TP Disabled",
@@ -1509,8 +1656,138 @@ end)
 -- Info Section
 local InfoSection = LuaHubTab:CreateSection("Information")
 LuaHubTab:CreateParagraph({
-    Title = "About Lua Hub V3",
-    Content = "Lua Hub V3 is the ultimate script collection for Roblox with premium features and advanced bypass systems. Created by Lua Hotel."
+    Title = "About Lua Hub V4 - FINAL UPDATE",
+    Content = "This is the final major feature update for Lua Hub. Future updates will focus on adding new game scripts and improving existing features. Thank you for using Lua Hub!"
+})
+
+LuaHubTab:CreateParagraph({
+    Title = "New in V4",
+    Content = "• Vehicle Fly (VFly)\n• Increased fly speed to 500\n• Volcano & Delta executor support\n• Mobile-friendly Click TP\n• Green highlight for aimbot target\n• Gravity Modifier\n• Script to lag your game for no reason at all\n• Respawn Button"
+})
+
+-- Additional V4 Features
+local ExtraSection = LuaHubTab:CreateSection("Extra V4 Features")
+
+-- Gravity Modifier
+local normalGravity = workspace.Gravity
+
+LuaHubTab:CreateSlider({
+    Name = "Gravity Modifier",
+    Range = {0, 196},
+    Increment = 10,
+    Suffix = " Gravity",
+    CurrentValue = 196,
+    Flag = "Gravity",
+    Callback = function(Value)
+        workspace.Gravity = Value
+        Rayfield:Notify({
+            Title = "Gravity Changed",
+            Content = "Gravity set to " .. Value,
+            Duration = 2,
+        })
+    end,
+})
+
+-- failed auto collect script so now it is ported to lua hub as a game lagger
+local autoCollectEnabled = false
+local autoCollectConnection
+
+LuaHubTab:CreateToggle({
+    Name = "Lag Game",
+    CurrentValue = false,
+    Flag = "AutoCollect",
+    Callback = function(Value)
+        autoCollectEnabled = Value
+        
+        if autoCollectEnabled then
+            Rayfield:Notify({
+                Title = "Game Lag ON",
+                Content = "Lagging your game.",
+                Duration = 2,
+            })
+            
+            autoCollectConnection = game:GetService("RunService").Heartbeat:Connect(function()
+                if not autoCollectEnabled then return end
+                
+                local player = game.Players.LocalPlayer
+                local character = player.Character
+                if not character then return end
+                
+                local hrp = character:FindFirstChild("HumanoidRootPart")
+                if not hrp then return end
+                
+                for _, item in pairs(workspace:GetDescendants()) do
+                    if item:IsA("BasePart") and (item.Name:lower():find("coin") or item.Name:lower():find("item") or item.Name:lower():find("pickup")) then
+                        if (item.Position - hrp.Position).Magnitude < 100 then
+                            item.CFrame = hrp.CFrame
+                        end
+                    end
+                end
+            end)
+        else
+            Rayfield:Notify({
+                Title = "Game Lag OFF",
+                Content = "Stopped lagging your game.",
+                Duration = 2,
+            })
+            
+            if autoCollectConnection then
+                autoCollectConnection:Disconnect()
+            end
+        end
+    end,
+})
+
+-- Respawn Button
+LuaHubTab:CreateButton({
+    Name = "Respawn Character",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        if character then
+            character:BreakJoints()
+            Rayfield:Notify({
+                Title = "Respawning",
+                Content = "Character will respawn shortly",
+                Duration = 2,
+            })
+        end
+    end,
+})
+
+-- Freeze Character
+local characterFrozen = false
+
+LuaHubTab:CreateToggle({
+    Name = "Freeze Character",
+    CurrentValue = false,
+    Flag = "FreezeChar",
+    Callback = function(Value)
+        characterFrozen = Value
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        
+        if character then
+            local hrp = character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                if characterFrozen then
+                    hrp.Anchored = true
+                    Rayfield:Notify({
+                        Title = "Character Frozen",
+                        Content = "Character position locked",
+                        Duration = 2,
+                    })
+                else
+                    hrp.Anchored = false
+                    Rayfield:Notify({
+                        Title = "Character Unfrozen",
+                        Content = "Character can move again",
+                        Duration = 2,
+                    })
+                end
+            end
+        end
+    end,
 })
 
 -- ============================================
@@ -1520,11 +1797,11 @@ local ConfigTab = Window:CreateTab("Config", "settings")
 local ConfigSection = ConfigTab:CreateSection("Hub Configuration")
 
 ConfigTab:CreateButton({
-    Name = "Unload Lua Hub V3",
+    Name = "Unload Lua Hub V4",
     Callback = function()
         Rayfield:Notify({
             Title = "Unloading...",
-            Content = "Lua Hub V3 is closing",
+            Content = "Lua Hub V4 is closing. Thank you for using!",
             Duration = 2,
         })
         wait(1)
