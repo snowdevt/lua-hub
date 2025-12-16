@@ -50,7 +50,7 @@ local Window = Rayfield:CreateWindow({
     },
     Discord = {
         Enabled = true,
-        Invite = "TQtNedMsVV",
+        Invite = "U2DQznmFps",
         RememberJoins = true
     },
     KeySystem = true,
