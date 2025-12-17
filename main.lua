@@ -1,14 +1,9 @@
 -- Lua Hub V4 by Lua Hotel
--- Advanced Multi-Game Script Hub - FINAL UPDATE
-
--- Load Rayfield Library FIRST
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
--- Get user info
 local userName = game.Players.LocalPlayer.Name
 local userKey = "nomorekey"
 
--- Executor Detection
 local function getExecutor()
     local executors = {
         ["Xeno"] = identifyexecutor and identifyexecutor():lower():find("xeno"),
@@ -37,7 +32,6 @@ end
 
 local currentExecutor = getExecutor()
 
--- Create Main Window with Key System
 local Window = Rayfield:CreateWindow({
     Name = "Lua Hub V4 | " .. currentExecutor,
     LoadingTitle = "Lua Hub V4 Loading...",
@@ -65,7 +59,6 @@ local Window = Rayfield:CreateWindow({
     }
 })
 
--- Show Introduction Notification
 Rayfield:Notify({
     Title = "Lua Hub V4 - FINAL UPDATE",
     Content = "25+ Premium Features! Welcome " .. userName,
@@ -81,7 +74,6 @@ Rayfield:Notify({
     },
 })
 
--- Executor Warning for Xeno/Solara
 if currentExecutor:lower():find("xeno") or currentExecutor:lower():find("solara") then
     Rayfield:Notify({
         Title = "Executor Warning",
@@ -91,7 +83,6 @@ if currentExecutor:lower():find("xeno") or currentExecutor:lower():find("solara"
     })
 end
 
--- Variables for custom scripts
 local flyEnabled = false
 local vflyEnabled = false
 local betterBypass = false
@@ -118,9 +109,6 @@ local vflyConnection
 local flyBodyVelocity
 local flyBodyGyro
 
--- ============================================
--- HOME TAB
--- ============================================
 local HomeTab = Window:CreateTab("Home", "home")
 local HomeSection = HomeTab:CreateSection("User Information")
 
@@ -165,9 +153,6 @@ HomeTab:CreateButton({
     end,
 })
 
--- ============================================
--- GENERAL TAB
--- ============================================
 local GeneralTab = Window:CreateTab("General", "home")
 local GeneralSection = GeneralTab:CreateSection("Universal Scripts")
 
@@ -207,9 +192,6 @@ GeneralTab:CreateButton({
     end,
 })
 
--- ============================================
--- JJS TAB
--- ============================================
 local JJSTab = Window:CreateTab("JJS", "sword")
 local JJSSection = JJSTab:CreateSection("Jujutsu Shenanigans Scripts")
 
@@ -249,9 +231,6 @@ JJSTab:CreateButton({
     end,
 })
 
--- ============================================
--- TSB TAB
--- ============================================
 local TSBTab = Window:CreateTab("TSB", "zap")
 local TSBSection = TSBTab:CreateSection("The Strongest Battlegrounds Scripts")
 
@@ -267,9 +246,6 @@ TSBTab:CreateButton({
     end,
 })
 
--- ============================================
--- BLOX FRUITS TAB
--- ============================================
 local BloxFruitsTab = Window:CreateTab("Blox Fruits", "apple")
 local BloxFruitsSection = BloxFruitsTab:CreateSection("Blox Fruits Scripts")
 
@@ -285,9 +261,6 @@ BloxFruitsTab:CreateButton({
     end,
 })
 
--- ============================================
--- PIANO TAB
--- ============================================
 local PianoTab = Window:CreateTab("Piano", "music")
 local PianoSection = PianoTab:CreateSection("Virtual Piano Scripts")
 
@@ -305,13 +278,9 @@ PianoTab:CreateButton({
     end,
 })
 
--- ============================================
--- LUA HUB TAB (Custom Scripts)
--- ============================================
 local LuaHubTab = Window:CreateTab("Lua Hub", "star")
 local LuaHubSection = LuaHubTab:CreateSection("Premium Lua Hub Features")
 
--- Advanced Fly Bypass with Teleport System
 LuaHubTab:CreateToggle({
     Name = "Fly Bypass (Advanced)",
     CurrentValue = false,
@@ -444,7 +413,6 @@ LuaHubTab:CreateSlider({
     end,
 })
 
--- Fly Keybind
 LuaHubTab:CreateKeybind({
     Name = "Fly Keybind",
     CurrentKeybind = "",
@@ -544,7 +512,7 @@ LuaHubTab:CreateKeybind({
     end,
 })
 
--- Vehicle Fly (VFly)
+
 local VehicleSection = LuaHubTab:CreateSection("Lua Hub Simple")
 
 LuaHubTab:CreateToggle({
@@ -628,7 +596,6 @@ LuaHubTab:CreateSlider({
     end,
 })
 
--- WalkSpeed
 LuaHubTab:CreateSlider({
     Name = "Walk Speed",
     Range = {16, 500},
@@ -649,7 +616,6 @@ LuaHubTab:CreateSlider({
     end,
 })
 
--- Jump Power
 LuaHubTab:CreateSlider({
     Name = "Jump Power",
     Range = {50, 500},
@@ -675,7 +641,6 @@ LuaHubTab:CreateSlider({
     end,
 })
 
--- NoClip with Advanced Bypass
 local noclipConnection
 local bypassParts = {}
 
@@ -747,7 +712,6 @@ LuaHubTab:CreateToggle({
     end,
 })
 
--- FOV Changer
 LuaHubTab:CreateSlider({
     Name = "FOV Changer",
     Range = {70, 120},
@@ -761,7 +725,6 @@ LuaHubTab:CreateSlider({
     end,
 })
 
--- ESP Players
 local espConnections = {}
 LuaHubTab:CreateToggle({
     Name = "Player ESP",
@@ -821,7 +784,6 @@ LuaHubTab:CreateToggle({
     end,
 })
 
--- Anti-AFK
 LuaHubTab:CreateToggle({
     Name = "Anti-AFK",
     CurrentValue = false,
@@ -854,7 +816,6 @@ LuaHubTab:CreateToggle({
     end,
 })
 
--- Infinite Jump
 local infiniteJumpEnabled = false
 local infJumpConnection
 
@@ -897,7 +858,6 @@ LuaHubTab:CreateToggle({
     end,
 })
 
--- Sky TP
 LuaHubTab:CreateButton({
     Name = "Sky TP (Teleport to Sky)",
     Callback = function()
@@ -916,7 +876,6 @@ LuaHubTab:CreateButton({
     end,
 })
 
--- FullBright
 local fullBrightEnabled = false
 LuaHubTab:CreateToggle({
     Name = "FullBright",
@@ -952,7 +911,6 @@ LuaHubTab:CreateToggle({
     end,
 })
 
--- Remove Textures (FPS Boost)
 LuaHubTab:CreateButton({
     Name = "Remove Textures (FPS Boost)",
     Callback = function()
@@ -980,10 +938,8 @@ LuaHubTab:CreateButton({
     end,
 })
 
--- PVP Section
 local PVPSection = LuaHubTab:CreateSection("PVP Features")
 
--- Aimbot
 local aimbotConnection
 local mouse = game.Players.LocalPlayer:GetMouse()
 
@@ -1010,13 +966,12 @@ LuaHubTab:CreateKeybind({
                     local humanoid = target.Parent:FindFirstChildOfClass("Humanoid")
                     if humanoid then
                         aimbotTarget = target.Parent
-                        
-                        -- Remove old highlight
+                    
                         if aimbotHighlight then
                             aimbotHighlight:Destroy()
                         end
                         
-                        -- Create green highlight for locked target
+                    
                         aimbotHighlight = Instance.new("Highlight")
                         aimbotHighlight.Adornee = aimbotTarget
                         aimbotHighlight.FillColor = Color3.fromRGB(0, 255, 0)
@@ -1048,7 +1003,7 @@ LuaHubTab:CreateKeybind({
                     workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, targetHrp.Position)
                     hrp.CFrame = CFrame.new(hrp.Position, Vector3.new(targetHrp.Position.X, hrp.Position.Y, targetHrp.Position.Z))
                 else
-                    -- Target lost, remove highlight
+                    
                     if aimbotHighlight then
                         aimbotHighlight:Destroy()
                         aimbotHighlight = nil
@@ -1075,7 +1030,7 @@ LuaHubTab:CreateKeybind({
     end,
 })
 
--- Auto Farm
+
 local autoFarmConnection
 
 LuaHubTab:CreateToggle({
@@ -1159,7 +1114,7 @@ LuaHubTab:CreateToggle({
     end,
 })
 
--- Kill Aura
+
 local killAuraEnabled = false
 local killAuraConnection
 local killAuraRange = 15
@@ -1228,7 +1183,7 @@ LuaHubTab:CreateToggle({
     end,
 })
 
--- Hitbox Expander
+
 local hitboxSize = 10
 local hitboxEnabled = false
 local hitboxConnection
@@ -1297,7 +1252,7 @@ LuaHubTab:CreateToggle({
     end,
 })
 
--- TP to Player
+
 local tpPlayerName = ""
 
 LuaHubTab:CreateInput({
@@ -1350,7 +1305,7 @@ LuaHubTab:CreateButton({
     end,
 })
 
--- Click TP
+
 local clickTpEnabled = false
 local clickConnection
 local isMobile = game:GetService("UserInputService").TouchEnabled
@@ -1378,7 +1333,7 @@ LuaHubTab:CreateToggle({
             end
             
             if isMobile then
-                -- Mobile: Simple tap to TP
+                
                 clickConnection = mouse.Button1Down:Connect(function()
                     if not clickTpEnabled then return end
                     
@@ -1397,7 +1352,7 @@ LuaHubTab:CreateToggle({
                     end
                 end)
             else
-                -- PC: Ctrl + Click to TP
+                
                 clickConnection = mouse.Button1Down:Connect(function()
                     if not clickTpEnabled then return end
                     
@@ -1435,7 +1390,6 @@ LuaHubTab:CreateToggle({
     end,
 })
 
--- Follow Player
 local FollowSection = LuaHubTab:CreateSection("Follow Player System")
 
 LuaHubTab:CreateInput({
@@ -1636,7 +1590,7 @@ LuaHubTab:CreateToggle({
     end,
 })
 
--- Update WalkSpeed and JumpPower continuously
+
 game:GetService("RunService").Heartbeat:Connect(function()
     local player = game.Players.LocalPlayer
     local character = player.Character
@@ -1653,7 +1607,7 @@ game:GetService("RunService").Heartbeat:Connect(function()
     end
 end)
 
--- Info Section
+
 local InfoSection = LuaHubTab:CreateSection("Information")
 LuaHubTab:CreateParagraph({
     Title = "About Lua Hub V4 - FINAL UPDATE",
@@ -1665,10 +1619,10 @@ LuaHubTab:CreateParagraph({
     Content = "• Vehicle Fly (VFly)\n• Increased fly speed to 500\n• Volcano & Delta executor support\n• Mobile-friendly Click TP\n• Green highlight for aimbot target\n• Gravity Modifier\n• Script to lag your game for no reason at all\n• Respawn Button"
 })
 
--- Additional V4 Features
+
 local ExtraSection = LuaHubTab:CreateSection("Extra V4 Features")
 
--- Gravity Modifier
+
 local normalGravity = workspace.Gravity
 
 LuaHubTab:CreateSlider({
@@ -1738,7 +1692,7 @@ LuaHubTab:CreateToggle({
     end,
 })
 
--- Respawn Button
+
 LuaHubTab:CreateButton({
     Name = "Respawn Character",
     Callback = function()
@@ -1755,7 +1709,6 @@ LuaHubTab:CreateButton({
     end,
 })
 
--- Freeze Character
 local characterFrozen = false
 
 LuaHubTab:CreateToggle({
@@ -1790,9 +1743,7 @@ LuaHubTab:CreateToggle({
     end,
 })
 
--- ============================================
--- CONFIG TAB
--- ============================================
+
 local ConfigTab = Window:CreateTab("Config", "settings")
 local ConfigSection = ConfigTab:CreateSection("Hub Configuration")
 
